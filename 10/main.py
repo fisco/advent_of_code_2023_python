@@ -1,4 +1,5 @@
 import copy
+import networkx as nx
 
 matrix = []
 directional_characters = {'←', '↑', '→', '↓'}
@@ -54,7 +55,6 @@ with open('input.txt', 'r') as f:
         matrix.append(list(line.strip()))
 
 stashed_matrix = copy.deepcopy(matrix)
-
 
 target_char = 'S'
 starting_row_index = None
@@ -174,6 +174,88 @@ for i, row in enumerate(matrix):
 # 
 # At every L and every F, see if there is an unbroken box.
 #   
+
+target_char = 'S'
+starting_row_index = None
+starting_array_index = None
+for i, inner_array in enumerate(stashed_matrix):
+    for j, char in enumerate(inner_array):
+        if char == target_char:
+            starting_row_index = i
+            starting_array_index = j
+            stashed_matrix[starting_array_index][starting_row_index] = 'B'
+            break
+
+
+while (starting_row_index != array_number) or (starting_array_index != column_number):
+    direction = stashed_matrix[array_number][column_number]
+    visited.append((array_number, column_number))
+    # stashed_matrix[array_number][column_number] = 'X'
+    match direction:
+        case '|': #is a vertical pipe connecting north and south.
+            if stashed_matrix[array_number-1][column_number] not in directional_characters:
+                stashed_matrix[array_number][column_number] = 'N'
+                array_number -= 1
+            else:
+                stashed_matrix[array_number][column_number] = 'S'
+                array_number += 1
+        case '-': #is a horizontal pipe connecting east and west.
+            if stashed_matrix[array_number][column_number-1] not in directional_characters:
+                stashed_matrix[array_number][column_number] = 'W'
+                column_number -= 1
+            else:
+                stashed_matrix[array_number][column_number] = 'E'
+                column_number += 1
+        case 'L': #is a 90-degree bend connecting north and east.
+            if stashed_matrix[array_number-1][column_number] not in directional_characters:
+                stashed_matrix[array_number][column_number] = 'N'
+                array_number -= 1
+            else:
+                stashed_matrix[array_number][column_number] = 'E'
+                column_number += 1
+        case 'J': #is a 90-degree bend connecting north and west.
+            if stashed_matrix[array_number-1][column_number] not in directional_characters:
+                stashed_matrix[array_number][column_number] = 'N'
+                array_number -= 1
+            else:
+                stashed_matrix[array_number][column_number] = 'W'
+                column_number -= 1
+        case '7': #is a 90-degree bend connecting south and west.
+            if stashed_matrix[array_number][column_number-1] not in directional_characters:
+                stashed_matrix[array_number][column_number] = 'W'
+                column_number -= 1
+            else:
+                stashed_matrix[array_number][column_number] = 'S'
+                array_number += 1
+        case 'F': #is a 90-degree bend connecting south and east.
+            if stashed_matrix[array_number][column_number+1] not in directional_characters:
+                stashed_matrix[array_number][column_number] = 'E'
+                column_number += 1
+            else:
+                stashed_matrix[array_number][column_number] = 'S'
+                array_number += 1
+        case _:
+            print("Major problem. The value is: " + direction)
+    counter += 1
+
+
+
+G = nx.DiGraph()
+
+# Add nodes and edges based on the stashed_matrix
+for i in range(len(stashed_matrix)):
+    for j in range(len(stashed_matrix[i])):
+        G.add_node((i, j))  # Add node with coordinates
+        # Check for valid connections
+        if i > 0 and stashed_matrix[i-1][j] != "S":
+            G.add_edge((i, j), (i-1, j), weight=stashed_matrix[i-1][j])
+        if j < len(stashed_matrix[i])-1 and stashed_matrix[i][j+1] != "W":
+            G.add_edge((i, j), (i, j+1), weight=stashed_matrix[i][j+1])
+        if i < len(stashed_matrix)-1 and stashed_matrix[i+1][j] != "N":
+            G.add_edge((i, j), (i+1, j), weight=stashed_matrix[i+1][j])
+        if j > 0 and stashed_matrix[i][j-1] != "E":
+            G.add_edge((i, j), (i, j-1), weight=stashed_matrix[i][j-1])
+
 
 
 
